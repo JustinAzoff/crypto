@@ -72,6 +72,10 @@ type ServerConfig struct {
 	// Note that RFC 4253 section 4.2 requires that this string start with
 	// "SSH-2.0-".
 	ServerVersion string
+
+	// MaxAuthenticationAttempts is the maximum number of times PasswordCallback
+	// plus PublicKeyCallback can be tried per connection
+	MaxAuthenticationAttempts int
 }
 
 // AddHostKey adds a private key as a host key. If an existing host
@@ -263,6 +267,7 @@ func (s *connection) serverAuthenticate(config *ServerConfig) (*Permissions, err
 	var err error
 	var cache pubKeyCache
 	var perms *Permissions
+	var authAttempts int
 
 userAuthLoop:
 	for {
@@ -423,6 +428,11 @@ userAuthLoop:
 
 		if err = s.transport.writePacket(Marshal(&failureMsg)); err != nil {
 			return nil, err
+		}
+
+		authAttempts++
+		if config.MaxAuthenticationAttempts != 0 && authAttempts > config.MaxAuthenticationAttempts {
+			break
 		}
 	}
 
