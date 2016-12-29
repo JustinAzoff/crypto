@@ -432,7 +432,7 @@ userAuthLoop:
 
 		authAttempts++
 		if config.MaxAuthenticationAttempts != 0 && authAttempts > config.MaxAuthenticationAttempts {
-			break
+			return nil, errors.New("ssh: MaxAuthenticationAttempts exceeded")
 		}
 	}
 
